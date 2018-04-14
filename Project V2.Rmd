@@ -1,0 +1,529 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+##Speed Dating Experient
+
+#Import data
+```{r}
+library(readr)
+Sdate <- read_csv("~/Academic/MS Statistics/STAT 6509 Regression Modeling/Project_Speed_Dating/Speed Dating Data.csv")
+```
+
+#Examine the data
+```{r}
+str(Sdate)
+```
+#Select the dataset we are interested in
+```{r}
+which(names(Sdate)%in%c("dec", "attr","sinc","intel","fun","amb","shar","age","samerace","gender","imprelig","goal","date","go_out","exphappy"))
+Sdate11<-Sdate[,c(3,15,34,42,46:48,68,98:104)]
+```
+
+#Check the missing values
+```{r}
+library(Amelia)
+missmap(Sdate11,main = "Missing values vs observed")
+```
+
+# Explore study field
+```{r}
+fields.cd <- c(
+  "Law",
+  "Math",
+  "Social Science, Psychologist" ,
+  "Medical Science, Pharmaceuticals, and Bio Tech",
+  "Engineering",
+  "English/Creative Writing/ Journalism",
+  "History/Religion/Philosophy",
+  "Business/Econ/Finance",
+  "Education, Academia",
+  "Biological Sciences/Chemistry/Physics",
+  "Social Work" ,
+  "Undergrad/undecided" ,
+  "Political Science/International Affairs" ,
+  "Film",
+  "Fine Arts/Arts Administration",
+  "Languages",
+  "Architecture",
+  "Other"
+)
+
+
+# Find number of men/women on each study field
+library(dplyr)
+fields <- Sdate[!is.na(Sdate$field_cd),] %>%
+  group_by(gender, field_cd) %>%
+  summarise(
+    my.n = n()
+  )
+
+# Plot study fields repartition
+library(ggplot2)
+ggplot(fields, aes(x = field_cd, y = my.n, fill = factor(gender))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_discrete(name = "Gender") +
+  xlab("Field") + ylab("Count") + ggtitle("Study fields repartition") +
+  scale_x_continuous(labels = fields.cd, breaks = 1:18) +
+  coord_flip()
+
+
+
+```
+
+#Explore the intended career
+```{r}
+career.cd <- c(
+  "Lawyer",
+  "Academic/Research", 
+  "Psychologist", 
+  "Doctor/Medicine",
+  "Engineer", 
+  "Creative Arts/Entertainment",
+  "BankingBusiness/CEO/Admin",
+  "Real Estate",
+  "International/Humanitarian Affairs",
+  "Undecided" ,
+  "Social Work",
+  "Speech Pathology",
+  "Politics",
+  "Pro sports/Athletics",
+  "Other",
+  "Journalism",
+  "Architecture"
+)
+
+careers <- Sdate[!is.na(Sdate$career_c),] %>%
+  group_by(gender, career_c) %>%
+  summarise(
+    my.n = n()
+  )
+
+ggplot(careers, aes(x = career_c, y = my.n, fill = factor(gender))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_discrete(name = "Gender") +
+  xlab("Career") + ylab("Count") + ggtitle("Careers repartition") +
+  scale_x_continuous(labels = career.cd, breaks = 1:17) +
+  coord_flip()
+
+```
+
+#Explore the age range
+```{r}
+Sdate$age[is.na(Sdate$age)] <- mean(Sdate$age,na.rm=T)
+Sdate$gender<-as.factor(Sdate$gender)
+levels(Sdate$gender)<-c("female","Male")
+ggplot(Sdate[which(!is.na(Sdate$age) & !is.na(Sdate$age_o)),], aes(x=as.factor(age), y=age_o, colour=gender)) +
+    geom_boxplot(aes()) +
+    geom_smooth(aes(group=as.factor(gender)), se=FALSE) + 
+    labs(list(title="Age Range for Dating", x = "Age", y = "Age of Partner")) +
+    ylim(18,40)
+summary(Sdate$age)
+    
+```
+# Explore race
+```{r}
+race.c <- c(
+  "Black/African American",
+  "European/Caucasian-American",
+  "Latino/Hispanic American",
+  "Asian/Pacific Islander/Asian-American",
+  "Native American",
+  "Other"
+)
+
+races <- Sdate[!is.na(Sdate$race),] %>%
+  group_by(gender, race) %>%
+  summarise(
+    my.n = n()
+  )
+
+ggplot(races, aes(x = race, y = my.n, fill = factor(gender))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_discrete(name = "Gender") +
+  xlab("Race") + ylab("Count") + ggtitle("Race repartition") +
+  scale_x_continuous(labels = race.c, breaks = 1:6) +
+  coord_flip()
+```
+# Explore dating goal
+```{r}
+goal.c <- c(
+  "Seemed like a fun night out",
+  "To meet new people",
+  "To get a date",
+  "Looking for a serious relationship",
+  "To say I did it",
+  "Other"
+)
+
+goals <- Sdate[!is.na(Sdate$goal),] %>%
+  group_by(gender, goal) %>%
+  summarise(
+    my.n = n()
+  )
+
+ggplot(goals, aes(x = goal, y = my.n, fill = factor(gender))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_discrete(name = "Gender") +
+  xlab("Goal") + ylab("Count") + ggtitle("Goal repartition") +
+  scale_x_continuous(labels = goal.c, breaks = 1:6) +
+  coord_flip()
+```
+# Explore normal date times 
+```{r}
+date.c <- c(
+  "Several times a week",
+  "Twice a week",
+  "Once a week",
+  "Twice a month",
+  "Once a month",
+  "Several times a year",
+  "Almost never"
+)
+
+dates <- Sdate[!is.na(Sdate$date),] %>%
+  group_by(gender, date) %>%
+  summarise(
+    my.n = n()
+  )
+
+ggplot(dates, aes(x = date, y = my.n, fill = factor(gender))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_discrete(name = "Gender") +
+  xlab("Date") + ylab("Count") + ggtitle("Date repartition") +
+  scale_x_continuous(labels = date.c, breaks = 1:7) +
+  coord_flip()
+```
+
+#number of missing values in each column
+```{r}
+sapply(Sdate11,function(x) sum(is.na(x)))
+```
+#number of unique values in each column
+```{r}
+sapply(Sdate11, function(x) length(unique(x)))
+```
+#Taking care of the missing values
+A typical approach is to replace the missing values with the average, the median or the mode of the existing one. We use the average.
+```{r}
+Sdate11$attr[is.na(Sdate11$attr)] <- mean(Sdate11$attr,na.rm=T)
+Sdate11$sinc[is.na(Sdate11$sinc)] <- mean(Sdate11$sinc,na.rm=T)
+Sdate11$intel[is.na(Sdate11$intel)] <- mean(Sdate11$intel,na.rm=T)
+Sdate11$fun[is.na(Sdate11$fun)] <- mean(Sdate11$fun,na.rm=T)
+Sdate11$amb[is.na(Sdate11$amb)] <- mean(Sdate11$amb,na.rm=T)
+Sdate11$shar[is.na(Sdate11$shar)] <- mean(Sdate11$shar,na.rm=T)
+
+Sdate11$imprelig[is.na(Sdate11$imprelig)] <- mean(Sdate11$imprelig,na.rm=T)
+Sdate11$goal[is.na(Sdate11$goal)] <- mean(Sdate11$goal,na.rm=T)
+Sdate11$date[is.na(Sdate11$date)] <- mean(Sdate11$date,na.rm=T)
+Sdate11$go_out[is.na(Sdate11$go_out)] <- mean(Sdate11$go_out,na.rm=T)
+Sdate11$exphappy[is.na(Sdate11$exphappy)] <- mean(Sdate11$exphappy,na.rm=T)
+Sdate11$age[is.na(Sdate11$age)] <- mean(Sdate11$age,na.rm=T)
+
+
+
+library(Amelia)
+missmap(Sdate11,main = "Missing values vs observed")
+
+```
+#Predictors selection
+```{r}
+
+library(psych)
+pairs.panels(Sdate[c("dec", "attr","sinc","intel","fun","amb","shar","gender","age","imprelig","goal","date","go_out","exphappy")])
+```
+
+
+
+#Design an logistic regression analysis
+We use dec as the response variable. Predictors are attr(attractive), sinc(sincere), intel(Intelligent), fun (Fun),	amb(ambitious),	shar(shared interests/hobbies).
+
+First, we split the dataset into training and testing dataset.
+```{r}
+set.seed(123)
+indx=sample(1:nrow(Sdate11), as.integer(0.9*nrow(Sdate11)))
+
+Sdate11_train = Sdate11[indx,]
+Sdate11_test = Sdate11[-indx,]
+
+Sdate11_train_labels = Sdate11[indx,9]
+Sdate11_test_labels = Sdate11[-indx,9]   
+
+Sdate11_lm<-glm(dec~attr+sinc+intel+fun+amb+shar+gender+samerace+imprelig+goal+age+date+go_out+exphappy,family=binomial,data=Sdate11_train)
+summary(Sdate11_lm)
+```
+We use 90% dataset as the training data and the left 10% as the testing data.
+
+#Check training data and testing data randomness
+```{r}
+Sdata11_train_gender<-as.factor(Sdate11_train$gender)
+summary(Sdata11_train_gender)
+Sdata11_test_gender<-as.factor(Sdate11_test$gender)
+summary(Sdata11_test_gender)
+Sdata11_train_dec<-as.factor(Sdate11_train$dec)
+summary(Sdata11_train_dec)
+Sdata11_test_dec<-as.factor(Sdate11_test$dec)
+summary(Sdata11_test_dec)
+```
+
+
+#AIC method
+#Specifying the null model
+```{r}
+null=glm(dec~1, family=binomial(link='logit'),data=Sdate11_train)
+summary(null)
+full =glm(dec~attr+sinc+intel+fun+amb+shar+gender+samerace+imprelig+goal+age+date+go_out+exphappy, family=binomial(link='logit'),data= Sdate11_train)
+summary(full)
+step(null, scope=list(lower=null, upper=full), direction="forward")
+```
+
+Fit the logistic regression full model, with all predictor variables
+```{r}
+Sdate11_lm<-glm(dec~attr+sinc+intel+fun+amb+shar+gender+imprelig+ date+go_out+exphappy, family=binomial(link='logit'),data=Sdate11_train)
+summary(Sdate11_lm)
+```
+
+#Check accuracy of the model
+```{r}
+glm.pred <- predict(Sdate11_lm,newdata=Sdate11_test,type='response')
+glm.pred <- ifelse(glm.pred > 0.5,1,0)
+
+table(glm.pred,Sdate11_test$dec)
+misClasificError <- mean(glm.pred != Sdate11_test$dec)
+print(paste('Accuracy',1-misClasificError))
+
+```
+
+#plot ROC
+```{r}
+library(ROCR)
+p <- predict(Sdate11_lm, newdata=Sdate11_test, type="response")
+pr <- prediction(p, Sdate11_test$dec)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+```
+
+
+#Improve the model performance
+drop the insignificant predictor, alpha = 0.05
+From the regression model outputs, we can see that intel does not have a significant effect on decisions.
+```{r}
+Sdate12_lm<-glm(dec~attr + sinc + fun + amb + shar + 
+    gender + imprelig + date + go_out, family=binomial(link='logit'),data=Sdate11_train)
+summary(Sdate12_lm)
+
+glm.pred <- predict(Sdate12_lm,newdata=Sdate11_test,type='response')
+glm.pred <- ifelse(glm.pred > 0.5,1,0)
+
+table(glm.pred,Sdate11_test$dec)
+misClasificError <- mean(glm.pred != Sdate11_test$dec)
+print(paste('Accuracy',1-misClasificError))
+```
+
+#plot ROC for the new model
+```{r}
+library(ROCR)
+p <- predict(Sdate12_lm, newdata=Sdate11_test, type="response")
+pr <- prediction(p, Sdate11_test$dec)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+We can see that the accuracy almost stay the same. So we keep the sincerity predictor in the model.????
+
+
+#Correlation between preditors#########
+```{r}
+library(psych)
+pairs.panels(Sdate11[c("dec", "attr","sinc","intel","fun","amb","shar","gender","age","imprelig","goal","date","go_out","exphappy")])
+
+```
+
+##Gender Differences
+#Split the data into male and female
+```{r}
+Sdate3<-subset(Sdate,gender=="female")
+Sdate4<-subset(Sdate,gender=="Male")
+```
+
+```{r}
+which(colnames(Sdate)=="gender")
+```
+#Select the dataset we are interested in
+```{r}
+SdateF<-Sdate3[,c(3,15,34,42,46:48,68,98:104)]
+SdateM<-Sdate4[,c(3,15,34,42,46:48,68,98:104)]
+```
+
+#Check the missing values
+```{r}
+missmap(SdateF)
+missmap(SdateM)
+```
+
+#Taking care of the missing values
+```{r}
+SdateF$attr[is.na(SdateF$attr)] <- mean(SdateF$attr,na.rm=T)
+SdateF$sinc[is.na(SdateF$sinc)] <- mean(SdateF$sinc,na.rm=T)
+SdateF$intel[is.na(SdateF$intel)] <- mean(SdateF$intel,na.rm=T)
+SdateF$fun[is.na(SdateF$fun)] <- mean(SdateF$fun,na.rm=T)
+SdateF$amb[is.na(SdateF$amb)] <- mean(SdateF$amb,na.rm=T)
+SdateF$shar[is.na(SdateF$shar)] <- mean(SdateF$shar,na.rm=T)
+
+SdateF$imprelig[is.na(SdateF$imprelig)] <- mean(SdateF$imprelig,na.rm=T)
+SdateF$goal[is.na(SdateF$goal)] <- mean(SdateF$goal,na.rm=T)
+SdateF$date[is.na(SdateF$date)] <- mean(SdateF$date,na.rm=T)
+SdateF$go_out[is.na(SdateF$go_out)] <- mean(SdateF$go_out,na.rm=T)
+SdateF$exphappy[is.na(SdateF$exphappy)] <- mean(SdateF$exphappy,na.rm=T)
+SdateF$age[is.na(SdateF$age)] <- mean(SdateF$age,na.rm=T)
+
+SdateM$attr[is.na(SdateM$attr)] <- mean(SdateM$attr,na.rm=T)
+SdateM$sinc[is.na(SdateM$sinc)] <- mean(SdateM$sinc,na.rm=T)
+SdateM$intel[is.na(SdateM$intel)] <- mean(SdateM$intel,na.rm=T)
+SdateM$fun[is.na(SdateM$fun)] <- mean(SdateM$fun,na.rm=T)
+SdateM$amb[is.na(SdateM$amb)] <- mean(SdateM$amb,na.rm=T)
+SdateM$shar[is.na(SdateM$shar)] <- mean(SdateM$shar,na.rm=T)
+
+
+SdateM$imprelig[is.na(SdateM$imprelig)] <- mean(SdateM$imprelig,na.rm=T)
+SdateM$goal[is.na(SdateM$goal)] <- mean(SdateM$goal,na.rm=T)
+SdateM$date[is.na(SdateM$date)] <- mean(SdateM$date,na.rm=T)
+SdateM$go_out[is.na(SdateM$go_out)] <- mean(SdateM$go_out,na.rm=T)
+SdateM$exphappy[is.na(SdateM$exphappy)] <- mean(SdateM$exphappy,na.rm=T)
+SdateM$age[is.na(SdateM$age)] <- mean(SdateM$age,na.rm=T)
+
+
+library(Amelia)
+missmap(SdateF,main = "Missing values vs observed")
+missmap(SdateM,main = "Missing values vs observed")
+```
+#Fit the logiestic regression value
+##Female
+```{r}
+set.seed(123)
+indxF=sample(1:nrow(SdateF), as.integer(0.9*nrow(SdateF)))
+
+SdateF_train = SdateF[indxF,]
+SdateF_test = SdateF[-indxF,]
+
+SdateF_train_labels = SdateF[indxF,2]
+SdateF_test_labels = SdateF[-indxF,2] 
+
+SdataF_train_dec<-as.factor(SdateF_train$dec)
+summary(SdataF_train_dec)
+
+SdateF_lm<-glm(dec~attr + sinc + intel + fun + amb + shar + imprelig + date + go_out + exphappy, family=binomial(link='logit'),data=SdateF_train)
+summary(SdateF_lm)
+
+glm.pred <- predict(SdateF_lm,newdata=SdateF_test,type='response')
+glm.pred <- ifelse(glm.pred > 0.5,1,0)
+
+table(glm.pred,SdateF_test$dec)
+misClasificError <- mean(glm.pred != SdateF_test$dec)
+print(paste('Accuracy',1-misClasificError))
+
+library(ROCR)
+pF <- predict(SdateF_lm, newdata=SdateF_test, type="response")
+prF <- prediction(pF, SdateF_test$dec)
+prfF <- performance(prF, measure = "tpr", x.measure = "fpr")
+plot(prfF)
+
+auc <- performance(prF, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+
+```
+#Improve the model 
+drop insignificant predictor-intel
+```{r}
+SdateF2_lm<-glm(dec~attr + intel + fun + amb + shar + exphappy, family=binomial(link='logit'),data=SdateF_train)
+summary(SdateF2_lm)
+
+glm.pred <- predict(SdateF2_lm,newdata=SdateF_test,type='response')
+glm.pred <- ifelse(glm.pred > 0.5,1,0)
+
+table(glm.pred,SdateF_test$dec)
+misClasificError <- mean(glm.pred != SdateF_test$dec)
+print(paste('Accuracy',1-misClasificError))
+
+library(ROCR)
+pF2<- predict(SdateF2_lm, newdata=SdateF_test, type="response")
+prF2 <- prediction(pF2, SdateF_test$dec)
+prfF2 <- performance(prF2, measure = "tpr", x.measure = "fpr")
+plot(prfF2)
+
+auc <- performance(prF2, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+##Male
+```{r}
+set.seed(123)
+indxM=sample(1:nrow(SdateM), as.integer(0.9*nrow(SdateM)))
+
+SdateM_train = SdateM[indxM,]
+SdateM_test = SdateM[-indxM,]
+
+SdateM_train_labels = SdateM[indxM,2]
+SdateM_test_labels = SdateM[-indxM,2]   
+
+SdataM_test_dec<-as.factor(SdateM_test$dec)
+summary(SdataM_test_dec)
+
+SdateM_lm<-glm(dec~attr + sinc + intel + fun + amb + shar + imprelig + date + go_out + exphappy, family=binomial(link='logit'),data=SdateM_train)
+summary(SdateM_lm)
+
+glm.pred <- predict(SdateM_lm,newdata=SdateM_test,type='response')
+glm.pred <- ifelse(glm.pred > 0.5,1,0)
+
+table(glm.pred,SdateM_test$dec)
+misClasificError <- mean(glm.pred != SdateM_test$dec)
+print(paste('Accuracy',1-misClasificError))
+
+library(ROCR)
+p <- predict(SdateM_lm, newdata=SdateM_test, type="response")
+pr <- prediction(p, SdateM_test$dec)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+#Improve the model 
+drop insignificant predictor-intel
+```{r}
+SdateM2_lm<-glm(dec~attr + sinc + fun + amb + shar + imprelig + date + exphappy, family=binomial(link='logit'),data=SdateM_train)
+summary(SdateM2_lm)
+
+glm.pred <- predict(SdateM2_lm,newdata=SdateM_test,type='response')
+glm.pred <- ifelse(glm.pred > 0.5,1,0)
+
+table(glm.pred,SdateM_test$dec)
+misClasificError <- mean(glm.pred != SdateM_test$dec)
+print(paste('Accuracy',1-misClasificError))
+
+library(ROCR)
+pF2<- predict(SdateM2_lm, newdata=SdateM_test, type="response")
+prF2 <- prediction(pF2, SdateM_test$dec)
+prfF2 <- performance(prF2, measure = "tpr", x.measure = "fpr")
+plot(prfF2)
+
+auc <- performance(prF2, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+
